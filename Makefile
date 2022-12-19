@@ -5,8 +5,9 @@ INCLUDE = -Iinclude/
 CLIBS = -lGL -lGLU -lglfw -lm -lXrandr -lXi -lX11 -lXxf86vm -lpthread -ldl -lXinerama -lXcursor
 ILIBS = -I./glad/include/
 SOURCE = source/*.cpp
+EXSOURCE = source/Ex01/Ex03.cpp
 DEST = export/pc/
 
 
-all: ${SOURCE}
-	${COMPILER} ${GLAD} ${ILIBS} ${INCLUDE} ${SOURCE} ${CFLAGS} ${CLIBS} -o ${DEST}main; 
+pc: ${EXSOURCE}
+	${COMPILER} ${GLAD} ${ILIBS} ${INCLUDE} ${EXSOURCE} ${CFLAGS} ${CLIBS} -o ${DEST}main; 

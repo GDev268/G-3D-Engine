@@ -26,7 +26,7 @@ int main(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
     
-    GLFWwindow* window = glfwCreateWindow(1280, 720,"Healthy is a nerd",NULL,NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720,"OpenGL Learning",NULL,NULL);
     if(window == nullptr){
         std::cout << "Failed to load the gl Window!";
     }
@@ -86,7 +86,7 @@ int main(){
     "out vec4 FragColor;\n"
     "void main()\n"
     "{\n"
-        "FragColor = vec4(5.0f, 0.0f, 0.0f, 0.5f);\n"
+        "FragColor = vec4(0.0f, 0.2f, 0.0f, 0.5f);\n"
     "}\n";
 
     unsigned int fragmentShader;
@@ -130,11 +130,6 @@ int main(){
 
     glBindVertexArray(VAO);
 
-    glUseProgram(shaderProgram);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);  
-
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);  
 
@@ -146,7 +141,7 @@ int main(){
     // 2. use our shader program when we want to render an object
     glUseProgram(shaderProgram);
 
-    glBindVertexArray(VAO);
+    /*glBindVertexArray(VAO);
     // 2. copy our vertices array in a vertex buffer for OpenGL to use
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -155,7 +150,7 @@ int main(){
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     // 4. then set the vertex attributes pointers
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);  
+    glEnableVertexAttribArray(0); */ 
 
     while(!glfwWindowShouldClose(window)){
         //Swap the buffers
