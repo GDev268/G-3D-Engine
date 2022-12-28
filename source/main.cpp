@@ -7,6 +7,10 @@
 #include <streambuf>
 #include <string>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 std::string loadShaderSrc(const char* filename);
@@ -14,6 +18,8 @@ std::string loadShaderSrc(const char* filename);
 int main() {
 	int success;
 	char infoLog[512];
+	glm::mat4 trans = glm::mat4(1.0f);
+	float test = 0.0f;
 
 	std::cout << "Hello, world!" << std::endl;
 
@@ -24,10 +30,6 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-# ifdef __APPLE__
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COPMPAT, GL_TRUE);
-#endif
 
 	GLFWwindow* window = glfwCreateWindow(1280, 720, "OpenGL Tutorial", NULL, NULL);
 	if (window == NULL) { // window not created
@@ -125,10 +127,11 @@ int main() {
 	glDeleteShader(fragmentShaders[1]);
 
 	float vertices[] = {
-		-0.25f, -0.5f, 0.0f,
-		0.15f, 0.0f, 0.0f,
-		0.0f, 0.5f, 0.0f,
-		0.5f, -0.4f, 0.0f
+		//Positions              //Colors
+	   -0.25f, -0.5f, 0.0f,   	 1.0f,1.0f,0.5f,
+		0.15f, 0.0f, 0.4f,       0.5f,1.0f,0.75f,
+		0.0f, 0.5f, -0.2f,		 0.6f,1.0f,0.2f,
+		0.5f, -0.4f, 0.2f,       1.0f,0.2f,1.0f
 	};
 	unsigned int indices[] = {
 		0, 1, 2, // first triangle
@@ -153,10 +156,21 @@ int main() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// set attributes pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+	//positions
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+	//Colors
+	glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6 * sizeof(float), (void*)(3* sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	trans = glm::rotate(trans,glm::radians(45.0f),glm::vec3(0.0f,0.0f,1.0f));
+	glUseProgram(shaderPrograms[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0],"matrix"),1,GL_FALSE,glm::value_ptr(trans));
+
 	while (!glfwWindowShouldClose(window)) {
+		test += 0.01f;
 		// process input
 		processInput(window);
 
@@ -168,13 +182,23 @@ int main() {
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glUseProgram(shaderPrograms[0]);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		glUseProgram(shaderPrograms[1]);
+		/*glUseProgram(shaderPrograms[1]);
 		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(3 * sizeof(float)));
-		glBindVertexArray(0);
+		glBindVertexArray(0);*/
 
-		// send new frame to window
+
+		trans = glm::translate(trans,glm::vec3(0.0001f,0.0001f,0.0001f));
+		glUseProgram(shaderPrograms[0]);
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0],"matrix"),1,GL_FALSE,glm::value_ptr(trans));
+
+		trans = glm::rotate(trans,glm::radians(test),glm::vec3(sin(0.1),0.1f,0.1f));
+		glUseProgram(shaderPrograms[0]);
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0],"matrix"),1,GL_FALSE,glm::value_ptr(trans));
+
+
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
