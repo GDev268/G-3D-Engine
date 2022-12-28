@@ -5,7 +5,7 @@ INCLUDE = -Iinclude/
 CLIBS = -lGL -lGLU -lglfw -lm -lXrandr -lXi -lX11 -lXxf86vm -lpthread -ldl -lXinerama -lXcursor
 ILIBS = -I./glad/include/
 SOURCE = source/*.cpp
-EXSOURCE = source/Ex01/Ex03.cpp
+EXSOURCE = source/*.cpp
 DEST = export/pc/
 
 
