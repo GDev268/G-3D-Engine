@@ -58,6 +58,13 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "valarray": "cpp"
-    }
+        "valarray": "cpp",
+        "codecvt": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp",
+        "optional": "cpp",
+        "iomanip": "cpp",
+        "variant": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
