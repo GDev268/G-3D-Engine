@@ -22,8 +22,13 @@ class Shader{
 
     std::string loadShaderSrc(const char* filepath);
     GLuint compileShader(const char* filepath,GLenum type);
-    void setMat4(const std::string& name,glm::mat4 value);
     void checkCompilation(GLuint shader);
+
+    void setValue(const std::string& name,bool value);
+    void setValue(const std::string& name,int value);
+    void setValue(const std::string& name,float value);
+    void setValue(const std::string& name,float value1,float value2,float value3,float value4);
+    void setValue(const std::string& name,glm::mat4 value);
 };
 
 

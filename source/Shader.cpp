@@ -57,10 +57,6 @@ GLuint Shader::compileShader(const char* filepath,GLenum type){
 	return curShader;
 }
 
-void Shader::setMat4(const std::string& name,glm::mat4 value){
-	glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
-}
-
 void Shader::checkCompilation(GLuint shader){
     int success;
 	char infoLog[512];
@@ -72,4 +68,29 @@ void Shader::checkCompilation(GLuint shader){
 		std::cout << "Error with vertex shader comp.:" << std::endl
 				  << infoLog << std::endl;
 	}
+}
+
+void Shader::setValue(const std::string &name, bool value)
+{
+	glUniform1i(glGetUniformLocation(id, name.c_str()),(int)value);
+}
+
+void Shader::setValue(const std::string &name, int value)
+{
+	glUniform1i(glGetUniformLocation(id, name.c_str()),value);
+}
+
+void Shader::setValue(const std::string &name, float value)
+{
+	glUniform1f(glGetUniformLocation(id, name.c_str()),value);
+}
+
+void Shader::setValue(const std::string &name, float value1, float value2, float value3, float value4)
+{
+	glUniform4f(glGetUniformLocation(id, name.c_str()),value1,value2,value3,value4);
+}
+
+void Shader::setValue(const std::string &name, glm::mat4 value)
+{
+	glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
 }
