@@ -64,7 +64,8 @@
         "unordered_set": "cpp",
         "optional": "cpp",
         "iomanip": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "*.rh": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

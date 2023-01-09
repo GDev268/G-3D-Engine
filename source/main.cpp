@@ -13,10 +13,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Shader.hpp"
+#include "Keyboard.hpp"
 
+inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
-
+Keyboard *keyboard;
+glm::mat4 mouseTransform = glm::mat4(1.0f);
 float testAlpha = 0.0f;
 
 std::string loadShaderSrc(const char *filename);
@@ -30,6 +33,8 @@ int main()
 	float test = 0.0f;
 
 	std::cout << "Hello, world!" << std::endl;
+
+	keyboard = new Keyboard();
 
 	glfwInit();
 
@@ -57,25 +62,24 @@ int main()
 
 	glViewport(0, 0, 1280, 720);
 
+	glfwSetKeyCallback(window, keyCallback);
+
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-	Shader* shader = new Shader("assets/shaders/vertex_default.glsl","assets/shaders/fragment_default.glsl");
-	Shader* shader2 = new Shader("assets/shaders/vertex_default.glsl","assets/shaders/fragment_core_2.glsl");
-
-
+	Shader *shader = new Shader("assets/shaders/vertex_default.glsl", "assets/shaders/fragment_default.glsl");
 
 	float vertices[] = {
 		// positions		// colors			// texture coordinates
-		-0.5f, -0.5f, 0.0f,	1.0f, 1.0f, 0.5f,	0.0f, 0.0f,	// bottom left
-		-0.5f, 0.5f, 0.0f,	0.5f, 1.0f, 0.75f,	0.0f, 1.0f,	// top left
-		0.5f, -0.5f, 0.0f,	0.6f, 1.0f, 0.2f,	1.0f, 0.0f,	// bottom right
-		0.5f, 0.5f, 0.0f,	1.0f, 0.2f, 1.0f,	1.0f, 1.0f	// top right
+		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.0f, 0.0f, // bottom left
+		-0.5f, 0.5f, 0.0f, 0.5f, 1.0f, 0.75f, 0.0f, 1.0f, // top left
+		0.5f, -0.5f, 0.0f, 0.6f, 1.0f, 0.2f, 1.0f, 0.0f,  // bottom right
+		0.5f, 0.5f, 0.0f, 1.0f, 0.2f, 1.0f, 1.0f, 1.0f	  // top right
 	};
 	unsigned int indices[] = {
 		0, 1, 2, // first triangle
-		3, 1, 2  // second triangle
+		3, 1, 2	 // second triangle
 	};
-	
+
 	// VBO, VAO, EBO
 	unsigned int VBO, VAO, EBO;
 	glGenBuffers(1, &VBO);
@@ -96,64 +100,67 @@ int main()
 	// set attributes pointers
 
 	// position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
 
 	// color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	// texture coordinate attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	//Texture
-	unsigned int texture1,texture2;
+	// Texture
+	unsigned int texture1, texture2;
 
-	glGenTextures(1,&texture1);
-	glBindTexture(GL_TEXTURE_2D,texture1);
+	glGenTextures(1, &texture1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
 
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	//load image
-	int width,height,nChannels;
+	// load image
+	int width, height, nChannels;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load("assets/images/image1.jpg",&width,&height,&nChannels,0);
-	if(data){
-		glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,data);
+	unsigned char *data = stbi_load("assets/images/image1.jpg", &width, &height, &nChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
-	else{
+	else
+	{
 		std::cout << "ERROR: IMAGE FAILED TO LOAD!";
 	}
 
 	stbi_image_free(data);
 
-	glGenTextures(1,&texture2);
-	glBindTexture(GL_TEXTURE_2D,texture2);
+	glGenTextures(1, &texture2);
+	glBindTexture(GL_TEXTURE_2D, texture2);
 
-	data = stbi_load("assets/images/image2.png",&width,&height,&nChannels,0);
-	if(data){
-		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,data);
+	data = stbi_load("assets/images/image2.png", &width, &height, &nChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
-	else{
+	else
+	{
 		std::cout << "ERROR: IMAGE FAILED TO LOAD!";
 	}
 
 	stbi_image_free(data);
 	shader->activate();
-	shader->setValue("texture1",0);
-	shader->setValue("texture2",1);
+	shader->setValue("texture1", 0);
+	shader->setValue("texture2", 1);
 
 	trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 1.0f));
 	shader->activate();
-	shader->setValue("matrix",trans);
-
+	shader->setValue("matrix", trans);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -167,21 +174,20 @@ int main()
 
 		trans = glm::rotate(trans, glm::radians(test), glm::vec3(test, test, 0.001f));
 		shader->activate();
-		shader->setValue("matrix",trans);
+		shader->setValue("matrix", trans);
 
 		shader->activate();
-		shader->setValue("alpha",testAlpha);		
+		shader->setValue("alpha", testAlpha);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D,texture1);
+		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D,texture2);
+		glBindTexture(GL_TEXTURE_2D, texture2);
 
 		// draw shapes
 		glBindVertexArray(VAO);
 		shader->activate();
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -202,21 +208,42 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 
 void processInput(GLFWwindow *window)
 {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+
+	if (keyboard->getKey(GLFW_KEY_ESCAPE))
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
 
-	if(glfwGetKey(window,GLFW_KEY_UP) == GLFW_PRESS){
-		if(testAlpha <= 1.0f){
+	if (keyboard->getKey(GLFW_KEY_KP_ADD))
+	{
+		if (testAlpha <= 1.0f)
+		{
 			testAlpha += 0.01f;
 		}
 	}
 
-	if(glfwGetKey(window,GLFW_KEY_DOWN) == GLFW_PRESS){
-		if(testAlpha >= 0.0f){
+	if (keyboard->getKey(GLFW_KEY_KP_SUBTRACT))
+	{
+		if (testAlpha >= 0.0f)
+		{
 			testAlpha += -0.01f;
 		}
 	}
 }
 
+inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+	if (action != GLFW_RELEASE)
+	{
+		if (!keyboard->keys[key])
+		{
+			keyboard->keys[key] = true;
+		}
+	}
+	else
+	{
+		keyboard->keys[key] = false;
+	}
+
+	keyboard->keysChanged[key] = action != GLFW_REPEAT;
+}
