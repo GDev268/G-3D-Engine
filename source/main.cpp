@@ -19,8 +19,9 @@ inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, i
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 Keyboard *keyboard;
-glm::mat4 mouseTransform = glm::mat4(1.0f);
-float testAlpha = 0.0f;
+
+unsigned SCREEN_WIDTH = 1280,SCREEN_HEIGHT = 720;
+float x,y,z;
 
 std::string loadShaderSrc(const char *filename);
 
@@ -29,7 +30,6 @@ int main()
 	int success;
 	char infoLog[512];
 	glm::mat4 trans = glm::mat4(1.0f);
-	glm::mat4 trans2 = glm::mat4(1.0f);
 	float test = 0.0f;
 
 	std::cout << "Hello, world!" << std::endl;
@@ -44,7 +44,7 @@ int main()
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow *window = glfwCreateWindow(1280, 720, "OpenGL Tutorial", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL Tutorial", NULL, NULL);
 	if (window == NULL)
 	{ // window not created
 		std::cout << "Could not create window." << std::endl;
@@ -60,7 +60,7 @@ int main()
 		return -1;
 	}
 
-	glViewport(0, 0, 1280, 720);
+	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	glfwSetKeyCallback(window, keyCallback);
 
@@ -68,23 +68,57 @@ int main()
 
 	Shader *shader = new Shader("assets/shaders/vertex_default.glsl", "assets/shaders/fragment_default.glsl");
 
+	glEnable(GL_DEPTH_TEST);
+
 	float vertices[] = {
-		// positions		// colors			// texture coordinates
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.5f, 0.0f, 0.0f, // bottom left
-		-0.5f, 0.5f, 0.0f, 0.5f, 1.0f, 0.75f, 0.0f, 1.0f, // top left
-		0.5f, -0.5f, 0.0f, 0.6f, 1.0f, 0.2f, 1.0f, 0.0f,  // bottom right
-		0.5f, 0.5f, 0.0f, 1.0f, 0.2f, 1.0f, 1.0f, 1.0f	  // top right
-	};
-	unsigned int indices[] = {
-		0, 1, 2, // first triangle
-		3, 1, 2	 // second triangle
+		//Positions				//Texture Positions
+		-0.5f, -0.5f, -0.5f, 	0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f, 	1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 		1.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 		1.0f, 1.0f,
+		-0.5f, 0.5f, -0.5f, 	0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 	0.0f, 0.0f,
+
+		-0.5f, -0.5f, 0.5f, 	0.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 		1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 		1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 		1.0f, 1.0f,
+		-0.5f, 0.5f, 0.5f, 		0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 	0.0f, 0.0f,
+
+		-0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 	1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 	0.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
+
+		0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 		1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,		0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 		0.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 	1.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 		1.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 		1.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 	0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
+
+		-0.5f, 0.5f, -0.5f, 	0.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 		1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 		0.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 	0.0f, 1.0f
 	};
 
-	// VBO, VAO, EBO
-	unsigned int VBO, VAO, EBO;
+	// VBO, VAO
+	unsigned int VBO, VAO;
 	glGenBuffers(1, &VBO);
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &EBO);
 
 	// bind VAO
 	glBindVertexArray(VAO);
@@ -93,23 +127,15 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	// put index array in EBO
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
 	// set attributes pointers
 
 	// position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
 
-	// color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
 	// texture coordinate attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	// Texture
 	unsigned int texture1, texture2;
@@ -126,6 +152,8 @@ int main()
 	// load image
 	int width, height, nChannels;
 	stbi_set_flip_vertically_on_load(true);
+
+
 	unsigned char *data = stbi_load("assets/images/image1.jpg", &width, &height, &nChannels, 0);
 	if (data)
 	{
@@ -139,13 +167,14 @@ int main()
 
 	stbi_image_free(data);
 
-	glGenTextures(1, &texture2);
-	glBindTexture(GL_TEXTURE_2D, texture2);
+	glGenTextures(0, &texture1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
 
-	data = stbi_load("assets/images/image2.png", &width, &height, &nChannels, 0);
+
+	/*data = stbi_load("assets/images/image2.jpg", &width, &height, &nChannels, 0);
 	if (data)
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else
@@ -154,30 +183,39 @@ int main()
 	}
 
 	stbi_image_free(data);
+
+	glGenTextures(1, &texture2);
+	glBindTexture(GL_TEXTURE_2D, texture2);*/
+
 	shader->activate();
 	shader->setValue("texture1", 0);
 	shader->setValue("texture2", 1);
 
-	trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 1.0f));
 	shader->activate();
 	shader->setValue("matrix", trans);
+
+	shader->activate();
+	trans = glm::scale(trans, glm::vec3(1.0f, 1.0f, 1.0f));
+	shader->setValue("matrix", trans);
+
+	x = 0.0f;
+	y = 0.0f;
+	z = 3.0f;
 
 	while (!glfwWindowShouldClose(window))
 	{
 		test += 0.001f;
+
 		// process input
 		processInput(window);
 
 		// render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		trans = glm::rotate(trans, glm::radians(test), glm::vec3(test, test, 0.001f));
+		/*trans = glm::rotate(trans, glm::radians(test), glm::vec3(test, test, 0.001f));
 		shader->activate();
-		shader->setValue("matrix", trans);
-
-		shader->activate();
-		shader->setValue("alpha", testAlpha);
+		shader->setValue("matrix", trans);*/
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
@@ -186,49 +224,43 @@ int main()
 
 		// draw shapes
 		glBindVertexArray(VAO);
+
+		//create transform
+		glm::mat4 model = glm::mat4(1.0f);
+		glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 projection = glm::mat4(1.0f);
+
+		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(-55.0f),glm::vec3(0.5f));
+		view = glm::translate(view,glm::vec3(-x,-y,-z));
+		projection = glm::perspective(glm::radians(45.0f),(float)SCREEN_WIDTH / SCREEN_HEIGHT,0.1f,100.0f);
+
+
 		shader->activate();
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		shader->setValue("model",model);
+		shader->setValue("view",view);
+		shader->setValue("projection",projection);
+
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES,0,36);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
 	glDeleteVertexArrays(1, &VAO);
-	glDeleteVertexArrays(1, &VBO);
-	glDeleteBuffers(1, &EBO);
+	glDeleteBuffers(1, &VBO);
 
 	glfwTerminate();
 	return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-	glViewport(0, 0, width, height);
-}
-
 void processInput(GLFWwindow *window)
 {
-
 	if (keyboard->getKey(GLFW_KEY_ESCAPE))
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
 
-	if (keyboard->getKey(GLFW_KEY_KP_ADD))
-	{
-		if (testAlpha <= 1.0f)
-		{
-			testAlpha += 0.01f;
-		}
-	}
-
-	if (keyboard->getKey(GLFW_KEY_KP_SUBTRACT))
-	{
-		if (testAlpha >= 0.0f)
-		{
-			testAlpha += -0.01f;
-		}
-	}
 }
 
 inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -246,4 +278,11 @@ inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, i
 	}
 
 	keyboard->keysChanged[key] = action != GLFW_REPEAT;
+}
+
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+{
+	glViewport(0, 0, width, height);
+	SCREEN_WIDTH = width;
+	SCREEN_HEIGHT = height;
 }
