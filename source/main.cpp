@@ -13,15 +13,33 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Shader.hpp"
-#include "Keyboard.hpp"
+#include "io/Keyboard.hpp"
+#include "io/Mouse.hpp"
+#include "io/Camera.hpp"
 
 inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
-Keyboard *keyboard;
 
-unsigned SCREEN_WIDTH = 1280,SCREEN_HEIGHT = 720;
-float x,y,z;
+inline void cursorPosCallback(GLFWwindow *window, double _x, double _y);
+inline void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
+inline void mouseWheelCallback(GLFWwindow* window,double dx,double dy);
+
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+
+void processInput(GLFWwindow *window, double dt);
+
+Keyboard *keyboard;
+Mouse *mouse;
+
+Camera *camera = new Camera(glm::vec3(2.0f, 0.0f, 0.3f));
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+double lastX;
+double lastY;
+
+unsigned SCREEN_WIDTH = 1280, SCREEN_HEIGHT = 720;
+float x, y, z;
+float angle;
 
 std::string loadShaderSrc(const char *filename);
 
@@ -35,6 +53,7 @@ int main()
 	std::cout << "Hello, world!" << std::endl;
 
 	keyboard = new Keyboard();
+	mouse = new Mouse();
 
 	glfwInit();
 
@@ -64,56 +83,60 @@ int main()
 
 	glfwSetKeyCallback(window, keyCallback);
 
+	glfwSetCursorPosCallback(window, cursorPosCallback);
+	glfwSetMouseButtonCallback(window, mouseButtonCallback);
+	glfwSetScrollCallback(window, mouseWheelCallback);
+
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	Shader *shader = new Shader("assets/shaders/vertex_default.glsl", "assets/shaders/fragment_default.glsl");
 
 	glEnable(GL_DEPTH_TEST);
 
 	float vertices[] = {
-		//Positions				//Texture Positions
-		-0.5f, -0.5f, -0.5f, 	0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f, 	1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 		1.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 		1.0f, 1.0f,
-		-0.5f, 0.5f, -0.5f, 	0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 	0.0f, 0.0f,
+		// Positions				//Texture Positions
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
-		-0.5f, -0.5f, 0.5f, 	0.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 		1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 		1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 		1.0f, 1.0f,
-		-0.5f, 0.5f, 0.5f, 		0.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 	0.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
 
-		-0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
-		-0.5f, 0.5f, -0.5f, 	1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 	0.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
 
-		0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 		1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,		0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 		0.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
 
-		-0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 	1.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 		1.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 		1.0f, 0.0f,
-		-0.5f, -0.5f, 0.5f, 	0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 	0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
 
-		-0.5f, 0.5f, -0.5f, 	0.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 		1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 		1.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 		0.0f, 0.0f,
-		-0.5f, 0.5f, -0.5f, 	0.0f, 1.0f
-	};
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
 
 	// VBO, VAO
 	unsigned int VBO, VAO;
@@ -153,11 +176,10 @@ int main()
 	int width, height, nChannels;
 	stbi_set_flip_vertically_on_load(true);
 
-
 	unsigned char *data = stbi_load("assets/images/image1.jpg", &width, &height, &nChannels, 0);
 	if (data)
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else
@@ -169,7 +191,6 @@ int main()
 
 	glGenTextures(0, &texture1);
 	glBindTexture(GL_TEXTURE_2D, texture1);
-
 
 	/*data = stbi_load("assets/images/image2.jpg", &width, &height, &nChannels, 0);
 	if (data)
@@ -200,14 +221,19 @@ int main()
 
 	x = 0.0f;
 	y = 0.0f;
-	z = 3.0f;
+	z = 0.0f;
+	angle = 0.0f;
 
 	while (!glfwWindowShouldClose(window))
 	{
+		double currentTime = glfwGetTime();
+		deltaTime = currentTime - lastFrame;
+		lastFrame = currentTime;
 		test += 0.001f;
 
 		// process input
-		processInput(window);
+		processInput(window,deltaTime);
+
 
 		// render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -225,23 +251,23 @@ int main()
 		// draw shapes
 		glBindVertexArray(VAO);
 
-		//create transform
+		// create transform
 		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 view = glm::mat4(1.0f);
 		glm::mat4 projection = glm::mat4(1.0f);
 
-		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(-55.0f),glm::vec3(0.5f));
-		view = glm::translate(view,glm::vec3(-x,-y,-z));
-		projection = glm::perspective(glm::radians(45.0f),(float)SCREEN_WIDTH / SCREEN_HEIGHT,0.1f,100.0f);
+		glm::mat4 mouseTransformation = glm::mat4(1.0f);
 
+		view = camera->getViewMatrix();
+		projection = glm::perspective(glm::radians(camera->zoom), (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
 
 		shader->activate();
-		shader->setValue("model",model);
-		shader->setValue("view",view);
-		shader->setValue("projection",projection);
+		shader->setValue("model", model);
+		shader->setValue("view", view);
+		shader->setValue("projection", projection);
 
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glDrawArrays(GL_TRIANGLES,0,36);
+		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -254,16 +280,53 @@ int main()
 	return 0;
 }
 
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, double dt)
 {
 	if (keyboard->getKey(GLFW_KEY_ESCAPE))
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
 
+	if (keyboard->getKey(GLFW_KEY_W))
+	{
+		camera->updatePosition(CameraDirection::FOWARD, dt);
+	}
+	if (keyboard->getKey(GLFW_KEY_S))
+	{
+		camera->updatePosition(CameraDirection::BACKWARD, dt);
+	}
+	if (keyboard->getKey(GLFW_KEY_D))
+	{
+		camera->updatePosition(CameraDirection::RIGHT, dt);
+	}
+
+	if (keyboard->getKey(GLFW_KEY_A))
+	{
+		camera->updatePosition(CameraDirection::LEFT, dt);
+	}
+
+	if (keyboard->getKey(GLFW_KEY_SPACE))
+	{
+		camera->updatePosition(CameraDirection::UP, dt);
+	}
+
+	if (keyboard->getKey(GLFW_KEY_LEFT_SHIFT))
+	{
+		camera->updatePosition(CameraDirection::DOWN, dt);
+	}
+
+	double dx = mouse->getDX(),dy = mouse->getDY();
+	if(dx != 0 || dy != 0){
+		camera->updateDirection(dx,dy);
+	}
+
+	double scrollDy = mouse->getScrollDY();
+	if(scrollDy != 0){
+		camera->updateZoom(scrollDy);
+	}
 }
 
-inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
 	if (action != GLFW_RELEASE)
 	{
@@ -278,6 +341,45 @@ inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, i
 	}
 
 	keyboard->keysChanged[key] = action != GLFW_REPEAT;
+}
+
+void cursorPosCallback(GLFWwindow *window, double _x, double _y)
+{
+	mouse->x = _x;
+	mouse->y = _y;
+
+	if (mouse->firstMouse)
+	{
+		mouse->lastX = mouse->x;
+		mouse->lastY = mouse->y;
+		mouse->firstMouse = false;
+	}
+
+	mouse->dx = mouse->x - mouse->lastX;
+	mouse->dy = mouse->lastY - mouse->y; // y coordinates are inverted
+	mouse->lastX = mouse->x;
+	mouse->lastY = mouse->y;
+}
+
+void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
+{
+	if (action != GLFW_RELEASE)
+	{
+		if (!mouse->buttons[button])
+		{
+			mouse->buttons[button] = true;
+		}
+	}
+	else
+	{
+		mouse->buttons[button] = false;
+	}
+	mouse->buttonsChanged[button] = action != GLFW_REPEAT;
+}
+
+void mouseWheelCallback(GLFWwindow* window,double dx,double dy){
+	mouse->scrollDx = dx;
+	mouse->scrollDy = dy;
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
