@@ -3,19 +3,19 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb/stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <fstream>
 #include <sstream>
 #include <streambuf>
 #include <string>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "Shader.hpp"
 #include "io/Keyboard.hpp"
 #include "io/Mouse.hpp"
 #include "io/Camera.hpp"
+#include "Window.hpp"
 
 inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
@@ -25,10 +25,11 @@ inline void mouseWheelCallback(GLFWwindow* window,double dx,double dy);
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
-void processInput(GLFWwindow *window, double dt);
+void processInput(double dt);
 
 Keyboard *keyboard;
 Mouse *mouse;
+Window* window;
 
 Camera *camera = new Camera(glm::vec3(2.0f, 0.0f, 0.3f));
 float deltaTime = 0.0f;
@@ -63,15 +64,15 @@ int main()
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "OpenGL Tutorial", NULL, NULL);
-	if (window == NULL)
-	{ // window not created
+	window = new Window();
+
+	if(window == nullptr){
 		std::cout << "Could not create window." << std::endl;
 		glfwTerminate();
 		return -1;
 	}
-	glfwMakeContextCurrent(window);
 
+	
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
@@ -79,20 +80,19 @@ int main()
 		return -1;
 	}
 
-	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	window->setViewport();
 
-	glfwSetKeyCallback(window, keyCallback);
+	glfwSetKeyCallback(window->_window, keyCallback);
 
-	glfwSetCursorPosCallback(window, cursorPosCallback);
-	glfwSetMouseButtonCallback(window, mouseButtonCallback);
-	glfwSetScrollCallback(window, mouseWheelCallback);
+	glfwSetCursorPosCallback(window->_window, cursorPosCallback);
+	glfwSetMouseButtonCallback(window->_window, mouseButtonCallback);
+	glfwSetScrollCallback(window->_window, mouseWheelCallback);
 
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window->_window, framebuffer_size_callback);
+	glfwSetInputMode(window->_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	Shader *shader = new Shader("assets/shaders/vertex_default.glsl", "assets/shaders/fragment_default.glsl");
 
-	glEnable(GL_DEPTH_TEST);
 
 	float vertices[] = {
 		// Positions				//Texture Positions
@@ -138,6 +138,7 @@ int main()
 		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
 		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
 
+
 	// VBO, VAO
 	unsigned int VBO, VAO;
 	glGenBuffers(1, &VBO);
@@ -176,10 +177,10 @@ int main()
 	int width, height, nChannels;
 	stbi_set_flip_vertically_on_load(true);
 
-	unsigned char *data = stbi_load("assets/images/image1.jpg", &width, &height, &nChannels, 0);
+	unsigned char *data = stbi_load("assets/images/dirt.jpg", &width, &height, &nChannels, 0);
 	if (data)
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else
@@ -224,20 +225,17 @@ int main()
 	z = 0.0f;
 	angle = 0.0f;
 
-	while (!glfwWindowShouldClose(window))
+	while (!window->shouldClose())
 	{
 		double currentTime = glfwGetTime();
 		deltaTime = currentTime - lastFrame;
 		lastFrame = currentTime;
-		test += 0.001f;
+		test += 1.0f;
+
+		window->update();
 
 		// process input
-		processInput(window,deltaTime);
-
-
-		// render
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		processInput(deltaTime);
 
 		/*trans = glm::rotate(trans, glm::radians(test), glm::vec3(test, test, 0.001f));
 		shader->activate();
@@ -258,6 +256,7 @@ int main()
 
 		glm::mat4 mouseTransformation = glm::mat4(1.0f);
 
+		model = glm::rotate(model,glm::radians(test),glm::vec3(1.0f,1.0f,1.0f));
 		view = camera->getViewMatrix();
 		projection = glm::perspective(glm::radians(camera->zoom), (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
 
@@ -268,9 +267,8 @@ int main()
 
 		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		
+		window->endFrame();
 	}
 
 	glDeleteVertexArrays(1, &VAO);
@@ -280,11 +278,11 @@ int main()
 	return 0;
 }
 
-void processInput(GLFWwindow *window, double dt)
+void processInput(double dt)
 {
 	if (keyboard->getKey(GLFW_KEY_ESCAPE))
 	{
-		glfwSetWindowShouldClose(window, true);
+		window->setShouldClose(true);
 	}
 
 	if (keyboard->getKey(GLFW_KEY_W))
