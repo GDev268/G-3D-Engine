@@ -1,4 +1,4 @@
-#include "Shader.hpp"
+#include "graphics/Shader.hpp"
 
 Shader::Shader(const char* vertexShaderPath,const char* fragmentShaderPath){
 	GLuint vertexShader = compileShader(vertexShaderPath,GL_VERTEX_SHADER);

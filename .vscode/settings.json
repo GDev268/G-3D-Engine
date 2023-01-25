@@ -67,5 +67,6 @@
         "variant": "cpp",
         "*.rh": "cpp"
     },
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+    "cmake.sourceDirectory": "${workspaceFolder}/glad/include/glm"
 }

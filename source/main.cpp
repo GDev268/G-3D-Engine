@@ -2,7 +2,6 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <stb/stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -11,7 +10,8 @@
 #include <streambuf>
 #include <string>
 
-#include "Shader.hpp"
+#include "graphics/Shader.hpp"
+#include "graphics/Texture.hpp"
 #include "io/Keyboard.hpp"
 #include "io/Mouse.hpp"
 #include "io/Camera.hpp"
@@ -162,56 +162,11 @@ int main()
 	glEnableVertexAttribArray(1);
 
 	// Texture
-	unsigned int texture1, texture2;
-
-	glGenTextures(1, &texture1);
-	glBindTexture(GL_TEXTURE_2D, texture1);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-	// load image
-	int width, height, nChannels;
-	stbi_set_flip_vertically_on_load(true);
-
-	unsigned char *data = stbi_load("assets/images/dirt.jpg", &width, &height, &nChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "ERROR: IMAGE FAILED TO LOAD!";
-	}
-
-	stbi_image_free(data);
-
-	glGenTextures(0, &texture1);
-	glBindTexture(GL_TEXTURE_2D, texture1);
-
-	/*data = stbi_load("assets/images/image2.jpg", &width, &height, &nChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "ERROR: IMAGE FAILED TO LOAD!";
-	}
-
-	stbi_image_free(data);
-
-	glGenTextures(1, &texture2);
-	glBindTexture(GL_TEXTURE_2D, texture2);*/
+	Texture* texture1 = new Texture("assets/images/dirt.jpg","dirt");
+	texture1->load();
 
 	shader->activate();
 	shader->setValue("texture1", 0);
-	shader->setValue("texture2", 1);
 
 	shader->activate();
 	shader->setValue("matrix", trans);
@@ -241,10 +196,7 @@ int main()
 		shader->activate();
 		shader->setValue("matrix", trans);*/
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture1);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture2);
+		texture1->bind();
 
 		// draw shapes
 		glBindVertexArray(VAO);

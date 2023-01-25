@@ -1,0 +1,2 @@
+/run/media/g/9A30C50530C4E979/Works/C++/OpenGL/3DEngine/build/CMakeFiles/edit_cache.dir
+/run/media/g/9A30C50530C4E979/Works/C++/OpenGL/3DEngine/build/CMakeFiles/rebuild_cache.dir
