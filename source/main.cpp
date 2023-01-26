@@ -16,6 +16,7 @@
 #include "io/Mouse.hpp"
 #include "io/Camera.hpp"
 #include "Window.hpp"
+#include "graphics/models/Cube.hpp"
 
 inline void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
@@ -93,92 +94,8 @@ int main()
 
 	Shader *shader = new Shader("assets/shaders/vertex_default.glsl", "assets/shaders/fragment_default.glsl");
 
-
-	float vertices[] = {
-		// Positions				//Texture Positions
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-
-		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
-
-
-	// VBO, VAO
-	unsigned int VBO, VAO;
-	glGenBuffers(1, &VBO);
-	glGenVertexArrays(1, &VAO);
-
-	// bind VAO
-	glBindVertexArray(VAO);
-
-	// bind VBO
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// set attributes pointers
-
-	// position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-	glEnableVertexAttribArray(0);
-
-	// texture coordinate attribute
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// Texture
-	Texture* texture1 = new Texture("assets/images/dirt.jpg","dirt");
-	texture1->load();
-
-	shader->activate();
-	shader->setValue("texture1", 0);
-
-	shader->activate();
-	shader->setValue("matrix", trans);
-
-	shader->activate();
-	trans = glm::scale(trans, glm::vec3(1.0f, 1.0f, 1.0f));
-	shader->setValue("matrix", trans);
-
-	x = 0.0f;
-	y = 0.0f;
-	z = 0.0f;
-	angle = 0.0f;
+	Cube* cube = new Cube(glm::vec3(0.0f,0.0f,-1.0f),glm::vec3(0.75f));
+	cube->init();
 
 	while (!window->shouldClose())
 	{
@@ -192,39 +109,21 @@ int main()
 		// process input
 		processInput(deltaTime);
 
-		/*trans = glm::rotate(trans, glm::radians(test), glm::vec3(test, test, 0.001f));
-		shader->activate();
-		shader->setValue("matrix", trans);*/
-
-		texture1->bind();
-
-		// draw shapes
-		glBindVertexArray(VAO);
-
 		// create transform
-		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 view = glm::mat4(1.0f);
 		glm::mat4 projection = glm::mat4(1.0f);
 
-		glm::mat4 mouseTransformation = glm::mat4(1.0f);
-
-		model = glm::rotate(model,glm::radians(test),glm::vec3(1.0f,1.0f,1.0f));
 		view = camera->getViewMatrix();
 		projection = glm::perspective(glm::radians(camera->zoom), (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
 
 		shader->activate();
-		shader->setValue("model", model);
 		shader->setValue("view", view);
 		shader->setValue("projection", projection);
 
-		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		
 		window->endFrame();
 	}
-
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
 
 	glfwTerminate();
 	return 0;

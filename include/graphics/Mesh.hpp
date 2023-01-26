@@ -24,11 +24,11 @@ public:
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    std::vector<Texture> textures;
+    std::vector<Texture*> textures;
     unsigned int VAO;
 
     Mesh();
-    Mesh(std::vector<Vertex> vertices,std::vector<unsigned int> indices,std::vector<Texture> textures);
+    Mesh(std::vector<Vertex> vertices,std::vector<unsigned int> indices,std::vector<Texture*> textures);
     ~Mesh();
 
     void render(Shader shader);
