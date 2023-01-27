@@ -1,3 +1,4 @@
+#pragma once
 #ifndef CUBE_HPP
 #define CUBE_HPP
 
@@ -8,12 +9,13 @@ class Cube : public Model
     public:
     glm::vec3 pos;
     glm::vec3 size;
+    Texture *tex;
 
     Cube(glm ::vec3 pos, glm::vec3 size) : pos(pos), size(size)
     {
     }
 
-    void init()
+    void init(bool diamonds = false)
     {
         int noVertices = 36;
 
@@ -67,20 +69,26 @@ class Cube : public Model
             indices[i] = i;
         }
 
-        Texture *tex = new Texture("assets/images/dirt.jpg", "texture1");
+        if(!diamonds){
+            tex = new Texture("assets/images/dirt.jpg", "texture1");
+        }
+        else{
+            tex = new Texture("assets/images/diamond.png", "texture1");
+        }
 
         meshes.push_back(new Mesh(Vertex::genList(vertices, noVertices), indices, {tex}));
     };
 
-    void render(Shader shader)
+    void render(Shader* shader)
     {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, pos);
         model = glm::scale(model, size);
-        shader.setValue("model", model);
+        shader->setValue("model", model);
 
         Model::render(shader);
     }
+
 };
 
 #endif

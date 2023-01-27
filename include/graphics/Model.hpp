@@ -21,7 +21,7 @@ public:
 
     void init();
 
-    void render(Shader shader);
+    void render(Shader* shader);
 
     void cleanup();
 };

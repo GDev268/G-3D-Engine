@@ -32,6 +32,8 @@ Keyboard *keyboard;
 Mouse *mouse;
 Window* window;
 
+std::vector<Cube*> cubes;
+
 Camera *camera = new Camera(glm::vec3(2.0f, 0.0f, 0.3f));
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -94,7 +96,24 @@ int main()
 
 	Shader *shader = new Shader("assets/shaders/vertex_default.glsl", "assets/shaders/fragment_default.glsl");
 
-	Cube* cube = new Cube(glm::vec3(0.0f,0.0f,-1.0f),glm::vec3(0.75f));
+	for(int i = 0;i < 3;i++){
+		for(int j = 0;j < 3;j++){
+			Cube* cube = new Cube(glm::vec3(0.0f + (i * 1.0f),0.0f,0.0f + (j * 1.0f)),glm::vec3(1.0f));
+			cubes.push_back(cube);
+			cube->init();
+		}
+	}
+
+	for(int i = 0;i < 2;i++){
+		for(int j = 0;j < 2;j++){
+			Cube* cube = new Cube(glm::vec3(0.5f + (i * 1.0f),-1.0f,0.5f + (j * 1.0f)),glm::vec3(1.0f));
+			cubes.push_back(cube);
+			cube->init();
+		}
+	}
+
+	Cube* cube = new Cube(glm::vec3(1.0f,-2.0f,1.0f),glm::vec3(1.0f));
+	cubes.push_back(cube);
 	cube->init();
 
 	while (!window->shouldClose())
@@ -120,7 +139,9 @@ int main()
 		shader->setValue("view", view);
 		shader->setValue("projection", projection);
 
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		for(int i = 0;i < cubes.size();i++){
+			cubes[i]->render(shader);
+		}
 		
 		window->endFrame();
 	}

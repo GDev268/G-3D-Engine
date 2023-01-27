@@ -27,11 +27,10 @@ public:
     std::vector<Texture*> textures;
     unsigned int VAO;
 
-    Mesh();
     Mesh(std::vector<Vertex> vertices,std::vector<unsigned int> indices,std::vector<Texture*> textures);
     ~Mesh();
 
-    void render(Shader shader);
+    void render(Shader* shader);
 
     void cleanup();
 

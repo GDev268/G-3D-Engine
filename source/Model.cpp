@@ -14,7 +14,7 @@ void Model::init()
 {
 }
 
-void Model::render(Shader shader)
+void Model::render(Shader* shader)
 {
     for(Mesh* curMesh : meshes){
         curMesh->render(shader);
